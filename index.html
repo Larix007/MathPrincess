@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu Maths Princesses & Licornes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Styles personnalisés */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* MODIFIÉ: Utilisation de l'image téléversée */
+            background-image: url('image_579fa7.jpg'); /* Utilise l'image fournie */
+            background-size: cover; /* Couvre tout l'écran */
+            background-position: center; /* Centre l'image */
+            background-repeat: no-repeat; /* Ne répète pas l'image */
+            background-attachment: fixed; /* Fixe l'image lors du défilement */
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            overflow: hidden;
+        }
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Styles pour vies et score */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0 1rem;
+            font-size: 1.2rem;
+            color: #880e4f;
+             background-color: rgba(255, 255, 255, 0.6);
+             padding: 0.3rem 0.8rem;
+             border-radius: 0.8rem;
+        }
+        .lives-display span {
+            color: #f44336;
+            font-size: 1.5rem;
+            margin-left: 0.2rem;
+            transition: transform 0.3s ease;
+        }
+         .lives-display span.lost {
+             opacity: 0.3;
+             transform: scale(0.8);
+         }
+        .highscore-display {
+             font-weight: bold;
+        }
+
+        .problem-text {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ad1457;
+            margin-bottom: 2rem;
+            min-height: 4.5rem;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+        }
+        .answer-button {
+            font-size: 1.8rem;
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            border-radius: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #ff80ab;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .answer-button:hover:not(:disabled) {
+            background-color: #f50057;
+            transform: translateY(-2px);
+        }
+        .answer-button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+         .answer-button:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+         }
+        .feedback {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 1.5rem;
+            min-height: 2.5rem;
+             background-color: rgba(255, 255, 255, 0.6);
+             padding: 0.2rem 0.5rem;
+             border-radius: 0.5rem;
+             display: inline-block;
+        }
+        .correct {
+            color: #4caf50;
+            animation: bounce 0.5s ease;
+            background-color: rgba(200, 255, 200, 0.7);
+        }
+        .incorrect {
+            color: #f44336;
+            animation: shake 0.5s ease;
+             background-color: rgba(255, 200, 200, 0.7);
+        }
+        .progress-bar-container {
+            width: 80%;
+            height: 25px;
+            background-color: rgba(248, 187, 208, 0.8);
+            border-radius: 12.5px;
+            margin: 1.5rem auto;
+            overflow: hidden;
+            position: relative;
+             border: 1px solid rgba(255,255,255,0.5);
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff80ab, #f50057);
+            border-radius: 12.5px;
+            transition: width 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+        }
+        .unicorn-icon {
+             width: 30px;
+             height: 30px;
+             position: absolute;
+             left: 0%;
+             top: -2px;
+             transition: left 0.5s ease-in-out;
+             z-index: 10;
+             filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+        }
+        .unicorn-svg {
+             fill: #ad1457;
+        }
+
+        /* Animations */
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
+        @keyframes sparkle { 0% { transform: scale(0) rotate(0deg); opacity: 0.5; } 50% { transform: scale(1.2) rotate(180deg); opacity: 1; } 100% { transform: scale(0) rotate(360deg); opacity: 0.5; } }
+        .sparkle { position: absolute; width: 12px; height: 12px; background-color: #fff; border-radius: 50%; pointer-events: none; animation: sparkle 0.7s ease-out; z-index: 20; box-shadow: 0 0 8px gold; }
+
+        /* Animation Victoire Niveau */
+        .level-up-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 215, 0, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 1.5rem; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out; backdrop-filter: blur(3px); }
+        .level-up-overlay.show { opacity: 1; pointer-events: auto; animation: fadeInGrow 0.4s ease-out forwards; }
+        .level-up-message { font-size: 2.8rem; font-weight: bold; color: #c2185b; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); margin-bottom: 1rem; transform: scale(0.8); opacity: 0; animation: popIn 0.5s 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; }
+        .level-up-sparkle { position: absolute; width: 15px; height: 15px; background: radial-gradient(circle, white 20%, gold 80%); border-radius: 50%; opacity: 0; animation: sparkleFall 1.2s ease-out forwards; box-shadow: 0 0 8px gold; }
+        @keyframes fadeInGrow { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes sparkleFall { 0% { transform: translateY(-30px) scale(0.5); opacity: 0; } 50% { opacity: 1; transform: translateY(40px) scale(1.2); } 100% { transform: translateY(120px) scale(0.5); opacity: 0; } }
+
+        /* Styles pour Game Over */
+        .game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); display: none; flex-direction: column; justify-content: center; align-items: center; border-radius: 1.5rem; z-index: 60; color: white; padding: 2rem; backdrop-filter: blur(3px); }
+        .game-over-overlay.show { display: flex; animation: fadeInGrow 0.5s ease-out forwards; }
+        .game-over-message { font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem; color: #ff8a80; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+        .final-score-info { font-size: 1.5rem; margin-bottom: 2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+        .restart-button { font-size: 1.5rem; padding: 0.8rem 1.8rem; border-radius: 1rem; border: none; cursor: pointer; transition: all 0.3s ease; background-color: #ff80ab; color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); }
+        .restart-button:hover { background-color: #f50057; transform: translateY(-2px); }
+         .game-container.game-over .problem-text,
+         .game-container.game-over .answer-options,
+         .game-container.game-over .feedback,
+         .game-container.game-over .progress-bar-container,
+         .game-container.game-over .level-info,
+         .game-container.game-over .game-info
+         {
+             visibility: hidden;
+             opacity: 0;
+             transition: visibility 0s 0.3s, opacity 0.3s ease;
+         }
+
+    </style>
+</head>
+<body>
+    <div class="game-container" id="game-container">
+        <div class="game-info">
+            <div id="lives-display" class="lives-display">Vies: </div>
+            <div id="highscore-display" class="highscore-display">Record: Niv. 0</div>
+        </div>
+
+        <h1 class="text-3xl font-bold mb-4 text-pink-700">Le Royaume des Maths</h1>
+
+        <div class="progress-bar-container">
+            <div id="progress-bar" class="progress-bar"></div>
+             <svg id="unicorn-icon" class="unicorn-icon unicorn-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.81 3.18c-1.08-.53-2.3-.8-3.56-.67-.8.08-1.57.38-2.26.84-.87.58-1.58 1.4-2.06 2.36-.7 1.42-.94 3.03-.66 4.58.18.97.58 1.87 1.15 2.67.1.14.2.28.3.41.44.62.96 1.17 1.53 1.67.8.7 1.7 1.25 2.67 1.66.17.07.34.14.51.2.9.32 1.86.48 2.82.48 1.1 0 2.18-.25 3.16-.73.86-.42 1.63-1.04 2.24-1.8.6-.74 1.03-1.6 1.24-2.54.3-.9.4-1.9.28-2.88-.13-1.2-.54-2.36-1.18-3.38-.46-.73-1.03-1.38-1.7-1.92-.5-.4-.9-.68-1.18-.82zm-1.37 1.39c.8.34 1.5.87 2.05 1.55.58.7.98 1.54 1.16 2.45.14.9.07 1.8-.2 2.68-.27.87-.75 1.66-1.38 2.3-.6.6-1.3 1.07-2.08 1.38-.9.36-1.88.5-2.86.38-1.1-.14-2.14-.58-3.02-1.25-.66-.5-1.24-1.1-1.7-1.78-.1-.15-.18-.3-.27-.46-.5-.7-.85-1.5-1-2.35-.2-.9-.2-1.88.04-2.8.28-1.1.8-2.1 1.5-2.9.5-.58 1.1-1.05 1.78-1.38.7-.34 1.46-.5 2.24-.48.9.03 1.78.28 2.54.74zM12 1.5l1.5 3-1.5 3-1.5-3L12 1.5z"/>
+            </svg>
+        </div>
+
+        <div id="problem" class="problem-text">Prêt ?</div>
+        <div id="answer-options" class="flex flex-wrap justify-center">
+            </div>
+        <div id="feedback" class="feedback">Bonne chance !</div>
+        <div id="level-info" class="mt-4 text-lg text-pink-600">Niveau: 1</div>
+
+        <div id="level-up-overlay" class="level-up-overlay"></div>
+
+        <div id="game-over-overlay" class="game-over-overlay">
+            <div class="game-over-message">Game Over !</div>
+            <div id="final-score-info" class="final-score-info">Tu as atteint le niveau X.</div>
+            <button id="restart-button" class="restart-button">Recommencer</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- JavaScript (inchangé par rapport à la v3) ---
+        // Éléments du DOM
+        const problemElement = document.getElementById('problem');
+        const answerOptionsElement = document.getElementById('answer-options');
+        const feedbackElement = document.getElementById('feedback');
+        const levelInfoElement = document.getElementById('level-info');
+        const progressBar = document.getElementById('progress-bar');
+        const unicornIcon = document.getElementById('unicorn-icon');
+        const gameContainer = document.getElementById('game-container');
+        const livesDisplay = document.getElementById('lives-display');
+        const highscoreDisplay = document.getElementById('highscore-display');
+        const levelUpOverlay = document.getElementById('level-up-overlay');
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+        const finalScoreInfo = document.getElementById('final-score-info');
+        const restartButton = document.getElementById('restart-button');
+
+        // Constantes
+        const INITIAL_LIVES = 5;
+        const INITIAL_MAX_NUMBER = 5;
+        const INITIAL_PROBLEMS_IN_LEVEL = 5;
+
+        // État du jeu
+        let currentLevel;
+        let maxNumber;
+        let problemsInLevel;
+        let correctAnswersInLevel;
+        let currentProblem;
+        let isAnimating;
+        let lives;
+        let highScore;
+
+        // Initialise ou réinitialise le jeu
+        function initializeGame() {
+            currentLevel = 1;
+            maxNumber = INITIAL_MAX_NUMBER;
+            problemsInLevel = INITIAL_PROBLEMS_IN_LEVEL;
+            correctAnswersInLevel = 0;
+            currentProblem = null;
+            isAnimating = false;
+            lives = INITIAL_LIVES;
+            highScore = parseInt(localStorage.getItem('mathPrincessHighScore') || '0');
+
+            updateLivesDisplay();
+            updateHighScoreDisplay();
+            levelInfoElement.textContent = `Niveau: ${currentLevel}`;
+            feedbackElement.textContent = 'Bonne chance !';
+            feedbackElement.className = 'feedback';
+            updateProgress();
+
+            levelUpOverlay.classList.remove('show');
+            gameOverOverlay.classList.remove('show');
+            gameContainer.classList.remove('game-over');
+
+            displayProblem();
+        }
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateProblem() {
+            const num1 = getRandomInt(0, maxNumber);
+            let num2 = getRandomInt(0, maxNumber);
+            const operation = '+';
+
+            if (operation === '+') {
+                const maxResult = Math.min(maxNumber + Math.floor(currentLevel / 2), 25);
+                num2 = getRandomInt(0, Math.max(0, maxResult - num1));
+            }
+
+            const correctAnswer = num1 + num2;
+            const problemText = `${num1} + ${num2} = ?`;
+
+            currentProblem = { num1, num2, operation, correctAnswer, problemText };
+            return currentProblem;
+        }
+
+        function displayProblem() {
+            if (isAnimating || lives <= 0) return;
+
+            const problem = generateProblem();
+            problemElement.textContent = problem.problemText;
+            answerOptionsElement.innerHTML = '';
+
+            const options = generateAnswerOptions(problem.correctAnswer);
+
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('answer-button');
+                button.onclick = (event) => checkAnswer(option, event);
+                answerOptionsElement.appendChild(button);
+            });
+
+            feedbackElement.textContent = '';
+            feedbackElement.className = 'feedback';
+            disableButtons(false);
+        }
+
+        function generateAnswerOptions(correctAnswer) {
+            const options = new Set([correctAnswer]);
+            const numOptions = 4;
+
+            while (options.size < numOptions) {
+                const offset = getRandomInt(1, 4) * (Math.random() < 0.5 ? -1 : 1);
+                let wrongAnswer = correctAnswer + offset;
+                if (wrongAnswer >= 0 && wrongAnswer !== correctAnswer && !options.has(wrongAnswer)) {
+                     if (wrongAnswer < maxNumber + 5) {
+                        options.add(wrongAnswer);
+                     }
+                } else {
+                    wrongAnswer = getRandomInt(Math.max(0, correctAnswer - 5), correctAnswer + 5);
+                     if (wrongAnswer >= 0 && !options.has(wrongAnswer)) {
+                         options.add(wrongAnswer);
+                     }
+                }
+                 if (options.size >= numOptions) break;
+                 if (options.size < numOptions && options.size > 15) {
+                     let fallback = 0;
+                     while(options.has(fallback)) fallback++;
+                     if(fallback >= 0) options.add(fallback);
+                 }
+            }
+            return Array.from(options).sort(() => Math.random() - 0.5);
+        }
+
+        function checkAnswer(selectedAnswer, event) {
+            if (isAnimating || lives <= 0) return;
+            disableButtons(true);
+
+            if (selectedAnswer === currentProblem.correctAnswer) {
+                feedbackElement.textContent = "✨ Bravo ! ✨";
+                feedbackElement.className = 'feedback correct';
+                correctAnswersInLevel++;
+                if (event) createSparkles(event);
+                updateProgress();
+
+                setTimeout(() => {
+                    if (correctAnswersInLevel >= problemsInLevel) {
+                        levelUp();
+                    } else {
+                        displayProblem();
+                    }
+                }, 1000);
+
+            } else {
+                lives--;
+                updateLivesDisplay();
+                feedbackElement.textContent = "Essaie encore !";
+                feedbackElement.className = 'feedback incorrect';
+                correctAnswersInLevel = 0;
+                updateProgress();
+
+                if (lives <= 0) {
+                    setTimeout(gameOver, 1200);
+                } else {
+                    setTimeout(() => {
+                        displayProblem();
+                    }, 1200);
+                }
+            }
+        }
+
+        function updateProgress() {
+            const progressPercentage = (correctAnswersInLevel / problemsInLevel) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            const iconWidth = unicornIcon.offsetWidth || 30;
+            const containerWidth = progressBar.parentNode.offsetWidth || gameContainer.offsetWidth * 0.8;
+            if (containerWidth > 0) {
+                const iconLeftPercent = Math.min(100 - (iconWidth / containerWidth * 100), progressPercentage);
+                unicornIcon.style.left = `${iconLeftPercent}%`;
+            } else {
+                 unicornIcon.style.left = `${progressPercentage}%`;
+            }
+        }
+
+        function disableButtons(disabled) {
+            const buttons = answerOptionsElement.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = disabled;
+            });
+        }
+
+        function levelUp() {
+            isAnimating = true;
+            currentLevel++;
+            if (currentLevel > highScore) {
+                highScore = currentLevel;
+                localStorage.setItem('mathPrincessHighScore', highScore.toString());
+                updateHighScoreDisplay();
+            }
+
+            if (currentLevel % 2 === 0) maxNumber += 2;
+            if (currentLevel % 3 === 0) problemsInLevel = Math.min(10, problemsInLevel + 1);
+
+            levelInfoElement.textContent = `Niveau: ${currentLevel}`;
+            correctAnswersInLevel = 0;
+            updateProgress();
+
+            showLevelUpAnimation();
+
+            setTimeout(() => {
+                isAnimating = false;
+                displayProblem();
+            }, 2500);
+        }
+
+        function gameOver() {
+            isAnimating = true;
+            feedbackElement.textContent = '';
+            finalScoreInfo.textContent = `Tu as atteint le niveau ${currentLevel}. Record: ${highScore}`;
+            gameOverOverlay.classList.add('show');
+            gameContainer.classList.add('game-over');
+        }
+
+        function updateLivesDisplay() {
+            livesDisplay.innerHTML = 'Vies: ';
+            for (let i = 0; i < INITIAL_LIVES; i++) {
+                const heartSpan = document.createElement('span');
+                heartSpan.textContent = '❤️';
+                if (i >= lives) {
+                    heartSpan.classList.add('lost');
+                }
+                livesDisplay.appendChild(heartSpan);
+            }
+        }
+
+        function updateHighScoreDisplay() {
+            highscoreDisplay.textContent = `Record: Niv. ${highScore}`;
+        }
+
+        function showLevelUpAnimation() {
+            feedbackElement.textContent = '';
+            levelUpOverlay.innerHTML = '';
+
+            const message = document.createElement('div');
+            message.classList.add('level-up-message');
+            message.textContent = `🎉 Niveau ${currentLevel} ! 🎉`;
+            levelUpOverlay.appendChild(message);
+
+            for (let i = 0; i < 15; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('level-up-sparkle');
+                sparkle.style.left = `${Math.random() * 90 + 5}%`;
+                sparkle.style.top = `${Math.random() * 20 - 10}%`;
+                sparkle.style.animationDelay = `${Math.random() * 0.5}s`;
+                sparkle.style.background = `radial-gradient(circle, white 20%, hsl(${Math.random() * 20 + 40}, 100%, ${Math.random() * 20 + 60}%) 80%)`;
+                levelUpOverlay.appendChild(sparkle);
+            }
+            levelUpOverlay.classList.add('show');
+
+            setTimeout(() => {
+                levelUpOverlay.classList.remove('show');
+                 setTimeout(() => { levelUpOverlay.innerHTML = ''; }, 500);
+            }, 2000);
+        }
+
+        function createSparkles(event) {
+            const numberOfSparkles = 10;
+            const rect = event.target.getBoundingClientRect();
+             const baseX = rect.left + rect.width / 2 - gameContainer.getBoundingClientRect().left;
+             const baseY = rect.top + rect.height / 2 - gameContainer.getBoundingClientRect().top;
+
+            for (let i = 0; i < numberOfSparkles; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                const offsetX = (Math.random() - 0.5) * 80;
+                const offsetY = (Math.random() - 0.5) * 80;
+                sparkle.style.left = `${baseX + offsetX}px`;
+                sparkle.style.top = `${baseY + offsetY}px`;
+                sparkle.style.backgroundColor = `hsl(${Math.random() * 60 + 280}, 100%, 75%)`;
+                sparkle.style.transform = `scale(${Math.random() * 0.5 + 0.5})`;
+                sparkle.style.zIndex = '30';
+                gameContainer.appendChild(sparkle);
+                sparkle.addEventListener('animationend', () => { sparkle.remove(); });
+            }
+        }
+
+        restartButton.onclick = initializeGame;
+
+        window.onload = initializeGame;
+
+    </script>
+</body>
+</html>
